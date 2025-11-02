@@ -1,0 +1,158 @@
+@model IEnumerable<Post>
+
+@{
+    ViewData["Title"] = "Gönderilerim";
+}
+
+<div class="reddit-container">
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <div class="reddit-main-content">
+                <!-- Header -->
+                <div class="reddit-post-card mb-3">
+                    <div class="reddit-post-content">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-1">
+                                    <i class="bi bi-person-circle me-2 text-reddit-blue"></i>@ViewData["Title"]
+                                </h2>
+                                <p class="text-muted mb-0">Tüm gönderilerinizi burada yönetin</p>
+                            </div>
+                            <a asp-action="Create" class="btn btn-reddit-orange">
+                                <i class="bi bi-plus-circle me-1"></i>Yeni Post
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var post in Model)
+                    {
+                        <div class="reddit-post-card">
+                            <!-- Vote Section -->
+                            <div class="reddit-vote-section">
+                                <button class="reddit-vote-btn upvote" title="Upvote" disabled>
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                </button>
+                                <span class="reddit-vote-count">0</span>
+                                <button class="reddit-vote-btn downvote" title="Downvote" disabled>
+                                    <i class="bi bi-arrow-down-circle"></i>
+                                </button>
+                            </div>
+
+                            <!-- Post Content -->
+                            <div class="reddit-post-content">
+                                <a asp-action="Details" asp-route-id="@post.Id" class="reddit-post-title">
+                                    @post.Title
+                                </a>
+
+                                <div class="reddit-post-meta">
+                                    <span>
+                                        <i class="bi bi-clock"></i>
+                                        @{
+                                            var timeSpan = DateTime.UtcNow - post.CreatedDate;
+                                            var timeAgo = timeSpan.TotalDays >= 1 ?
+                                                $"{(int)timeSpan.TotalDays} gün önce" :
+                                                timeSpan.TotalHours >= 1 ?
+                                                    $"{(int)timeSpan.TotalHours} saat önce" :
+                                                    $"{(int)timeSpan.TotalMinutes} dakika önce";
+                                        }
+                                        @timeAgo
+                                    </span>
+                                    @if (post.UpdatedDate.HasValue)
+                                    {
+                                        <span>
+                                            <i class="bi bi-pencil"></i>
+                                            Düzenlendi
+                                        </span>
+                                    }
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(post.Content))
+                                {
+                                    <div class="reddit-post-preview">
+                                        @(post.Content.Length > 200 ? post.Content.Substring(0, 200) + "..." : post.Content)
+                                    </div>
+                                }
+
+                                <div class="reddit-post-actions border-top pt-2 mt-2">
+                                    <a asp-action="Details" asp-route-id="@post.Id">
+                                        <i class="bi bi-eye"></i> Görüntüle
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@post.Id" class="text-warning">
+                                        <i class="bi bi-pencil"></i> Düzenle
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@post.Id" method="post" class="d-inline" onsubmit="return confirm('Bu gönderiyi silmek istediğinizden emin misiniz?');">
+                                        <button type="submit" class="text-danger">
+                                            <i class="bi bi-trash"></i> Sil
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="reddit-post-card">
+                        <div class="reddit-post-content text-center py-5">
+                            <i class="bi bi-file-earmark-text" style="font-size: 4rem; color: var(--reddit-text-secondary);"></i>
+                            <h4 class="mt-3">Henüz hiç gönderi oluşturmadınız</h4>
+                            <p class="text-muted mb-3">İlk gönderinizi oluşturarak topluluğa katılın!</p>
+                            <a asp-action="Create" class="btn btn-reddit-primary">
+                                <i class="bi bi-plus-circle me-1"></i>İlk Gönderiyi Oluştur
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="reddit-sidebar">
+                <!-- User Stats Card -->
+                <div class="reddit-sidebar-card">
+                    <div class="reddit-sidebar-header">
+                        Profil İstatistikleri
+                    </div>
+                    <div class="reddit-sidebar-content">
+                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                            <div class="text-center flex-fill">
+                                <div class="fw-bold text-reddit-blue" style="font-size: 1.5rem;">
+                                    @(Model?.Count() ?? 0)
+                                </div>
+                                <small class="text-muted">Toplam Post</small>
+                            </div>
+                            <div class="text-center flex-fill border-start">
+                                <div class="fw-bold text-reddit-orange" style="font-size: 1.5rem;">
+                                    0
+                                </div>
+                                <small class="text-muted">Yorum</small>
+                            </div>
+                        </div>
+                        <a asp-action="Create" class="reddit-create-post-btn">
+                            <i class="bi bi-plus-circle me-2"></i>Yeni Post Oluştur
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Card -->
+                <div class="reddit-sidebar-card">
+                    <div class="reddit-sidebar-header">
+                        Hızlı İşlemler
+                    </div>
+                    <div class="reddit-sidebar-content">
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-reddit-secondary btn-sm">
+                                <i class="bi bi-house-door me-1"></i>Ana Sayfaya Dön
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

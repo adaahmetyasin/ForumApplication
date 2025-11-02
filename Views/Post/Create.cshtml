@@ -1,0 +1,69 @@
+@model CreatePostViewModel
+
+@{
+    ViewData["Title"] = "Yeni Gönderi Oluştur";
+}
+
+<div class="reddit-container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="reddit-form-card">
+                <div class="mb-4">
+                    <h2 class="text-reddit-orange">
+                        <i class="bi bi-plus-circle me-2"></i>@ViewData["Title"]
+                    </h2>
+                    <p class="text-muted">Topluluğa düşüncelerinizi paylaşın</p>
+                </div>
+
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Title" class="form-label">
+                            <i class="bi bi-pencil-square me-1"></i>Başlık
+                        </label>
+                        <input asp-for="Title" class="form-control" placeholder="İlgi çekici bir başlık yazın..." />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                        <small class="text-muted d-block mt-1">Maksimum 200 karakter</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Content" class="form-label">
+                            <i class="bi bi-card-text me-1"></i>İçerik
+                        </label>
+                        <textarea asp-for="Content" class="form-control" rows="12" placeholder="Ne düşünüyorsunuz? Detayları burada paylaşın..."></textarea>
+                        <span asp-validation-for="Content" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end border-top pt-3">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-reddit-secondary">
+                            <i class="bi bi-x-circle me-1"></i>İptal
+                        </a>
+                        <button type="submit" class="btn btn-reddit-primary">
+                            <i class="bi bi-send me-1"></i>Gönder
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Posting Guidelines -->
+            <div class="reddit-sidebar-card mt-3">
+                <div class="reddit-sidebar-header">
+                    <i class="bi bi-info-circle me-2"></i>Gönderi Kuralları
+                </div>
+                <div class="reddit-sidebar-content">
+                    <ul class="mb-0 small">
+                        <li class="mb-2">Açık ve anlaşılır bir başlık kullanın</li>
+                        <li class="mb-2">İçeriğinizi düzenli ve okunaklı tutun</li>
+                        <li class="mb-2">Saygılı bir dil kullanın</li>
+                        <li class="mb-2">Spam veya uygunsuz içerik paylaşmayın</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

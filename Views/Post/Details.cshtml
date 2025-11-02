@@ -1,0 +1,259 @@
+@model Post
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="reddit-container">
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <div class="reddit-main-content">
+                <!-- Post Detail Card -->
+                <div class="reddit-post-card">
+                    <!-- Vote Section -->
+                    <div class="reddit-vote-section">
+                        <button class="reddit-vote-btn upvote" title="Upvote">
+                            <i class="bi bi-arrow-up-circle"></i>
+                        </button>
+                        <span class="reddit-vote-count">0</span>
+                        <button class="reddit-vote-btn downvote" title="Downvote">
+                            <i class="bi bi-arrow-down-circle"></i>
+                        </button>
+                    </div>
+
+                    <!-- Post Content -->
+                    <div class="reddit-post-content">
+                        <div class="reddit-detail-header">
+                            <h1 class="reddit-detail-title">@Model.Title</h1>
+
+                            <div class="reddit-post-meta">
+                                <span>
+                                    <i class="bi bi-person"></i>
+                                    <strong>u/@Model.User?.UserName</strong>
+                                </span>
+                                <span>
+                                    <i class="bi bi-clock"></i>
+                                    @{
+                                        var timeSpan = DateTime.UtcNow - Model.CreatedDate;
+                                        var timeAgo = timeSpan.TotalDays >= 1 ?
+                                            $"{(int)timeSpan.TotalDays} gün önce" :
+                                            timeSpan.TotalHours >= 1 ?
+                                                $"{(int)timeSpan.TotalHours} saat önce" :
+                                                $"{(int)timeSpan.TotalMinutes} dakika önce";
+                                    }
+                                    @timeAgo
+                                </span>
+                                @if (Model.UpdatedDate.HasValue)
+                                {
+                                    <span>
+                                        <i class="bi bi-pencil"></i>
+                                        @{
+                                            var updateTimeSpan = DateTime.UtcNow - Model.UpdatedDate.Value;
+                                            var updateTimeAgo = updateTimeSpan.TotalDays >= 1 ?
+                                                $"{(int)updateTimeSpan.TotalDays} gün önce düzenlendi" :
+                                                updateTimeSpan.TotalHours >= 1 ?
+                                                    $"{(int)updateTimeSpan.TotalHours} saat önce düzenlendi" :
+                                                    $"{(int)updateTimeSpan.TotalMinutes} dakika önce düzenlendi";
+                                        }
+                                        @updateTimeAgo
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="reddit-detail-content">
+                            <p style="white-space: pre-wrap;">@Model.Content</p>
+                        </div>
+
+                        <div class="reddit-post-actions border-top pt-2 mt-3">
+                            <a href="#">
+                                <i class="bi bi-chat-dots"></i> 0 Yorumlar
+                            </a>
+                            <a href="#">
+                                <i class="bi bi-share"></i> Paylaş
+                            </a>
+                            <a href="#">
+                                <i class="bi bi-bookmark"></i> Kaydet
+                            </a>
+                            <a href="#">
+                                <i class="bi bi-flag"></i> Raporla
+                            </a>
+                            @if (User.Identity?.IsAuthenticated == true && Model.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                            {
+                                <a asp-action="Edit" asp-route-id="@Model.Id" class="text-warning">
+                                    <i class="bi bi-pencil"></i> Düzenle
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Bu gönderiyi silmek istediğinizden emin misiniz?');">
+                                    <button type="submit" class="text-danger">
+                                        <i class="bi bi-trash"></i> Sil
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="reddit-post-card mt-3">
+                    <div class="reddit-post-content">
+                        <h5 class="mb-3">
+                            <i class="bi bi-chat-dots me-2"></i>Yorumlar (@Model.Comments.Count)
+                        </h5>
+
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form asp-controller="Post" asp-action="AddComment" method="post" class="mb-4 p-3" style="background-color: var(--reddit-hover); border-radius: 4px;">
+                                <input type="hidden" name="postId" value="@Model.Id" />
+                                <textarea name="content" class="form-control mb-2" rows="3" placeholder="Düşüncelerinizi paylaşın..." required maxlength="1000"></textarea>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Maksimum 1000 karakter</small>
+                                    <button type="submit" class="btn btn-reddit-primary btn-sm">
+                                        <i class="bi bi-send me-1"></i>Yorum Yap
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 mb-4" style="background-color: var(--reddit-hover); border-radius: 4px;">
+                                <p class="mb-2">Yorum yapmak için giriş yapmanız gerekiyor</p>
+                                <a asp-controller="Account" asp-action="Login" class="btn btn-reddit-primary btn-sm">Giriş Yap</a>
+                            </div>
+                        }
+
+                        @if (Model.Comments != null && Model.Comments.Any())
+                        {
+                            <div class="comments-list">
+                                @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedDate))
+                                {
+                                    <div class="comment-item mb-3 p-3" style="background-color: var(--reddit-hover); border-radius: 4px; border-left: 3px solid var(--reddit-blue);">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem; color: var(--reddit-blue);"></i>
+                                                <div>
+                                                    <strong class="text-reddit-blue">u/@comment.User?.UserName</strong>
+                                                    <small class="text-muted ms-2">
+                                                        <i class="bi bi-clock"></i>
+                                                        @{
+                                                            var commentTimeSpan = DateTime.UtcNow - comment.CreatedDate;
+                                                            var commentTimeAgo = commentTimeSpan.TotalDays >= 1 ?
+                                                                $"{(int)commentTimeSpan.TotalDays} gün önce" :
+                                                                commentTimeSpan.TotalHours >= 1 ?
+                                                                    $"{(int)commentTimeSpan.TotalHours} saat önce" :
+                                                                    $"{(int)commentTimeSpan.TotalMinutes} dakika önce";
+                                                        }
+                                                        @commentTimeAgo
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            @if (User.Identity?.IsAuthenticated == true &&
+                                                (comment.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value || User.IsInRole("Admin")))
+                                            {
+                                                <form asp-controller="Post" asp-action="DeleteComment" asp-route-id="@comment.Id" asp-route-postId="@Model.Id" method="post"
+                                                      onsubmit="return confirm('Bu yorumu silmek istediğinizden emin misiniz?');">
+                                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                        <p class="mb-0" style="white-space: pre-wrap;">@comment.Content</p>
+                                        @if (comment.UpdatedDate.HasValue)
+                                        {
+                                            <small class="text-muted">
+                                                <i class="bi bi-pencil"></i> Düzenlendi
+                                            </small>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-chat-square-text" style="font-size: 2rem;"></i>
+                                <p class="mt-2">Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Back Button -->
+                <div class="mt-3">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-reddit-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Ana Sayfaya Dön
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="reddit-sidebar">
+                <!-- Author Info Card -->
+                <div class="reddit-sidebar-card">
+                    <div class="reddit-sidebar-header">
+                        Gönderi Sahibi
+                    </div>
+                    <div class="reddit-sidebar-content">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-person-circle me-2" style="font-size: 2.5rem; color: var(--reddit-blue);"></i>
+                            <div>
+                                <div class="fw-bold">u/@Model.User?.UserName</div>
+                                <small class="text-muted">@Model.User?.RegisteredDate.ToString("MMM yyyy") tarihinden beri üye</small>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="small text-muted">
+                            <div class="mb-2">
+                                <i class="bi bi-file-text me-2"></i>
+                                <strong>Post Sayısı:</strong> @Model.User?.Posts.Count
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Community Card -->
+                <div class="reddit-sidebar-card">
+                    <div class="reddit-sidebar-header">
+                        Topluluk Hakkında
+                    </div>
+                    <div class="reddit-sidebar-content">
+                        <p class="mb-3">ForumApp'e hoş geldiniz! Düşüncelerinizi paylaşın ve tartışmalara katılın.</p>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a asp-controller="Post" asp-action="Create" class="reddit-create-post-btn">
+                                <i class="bi bi-plus-circle me-2"></i>Yeni Post Oluştur
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-reddit-primary w-100 mb-2">
+                                Kayıt Ol
+                            </a>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-reddit-secondary w-100">
+                                Giriş Yap
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Rules Card -->
+                <div class="reddit-sidebar-card">
+                    <div class="reddit-sidebar-header">
+                        Topluluk Kuralları
+                    </div>
+                    <div class="reddit-sidebar-content">
+                        <ol class="ps-3 mb-0 small">
+                            <li class="mb-2">Saygılı olun</li>
+                            <li class="mb-2">Spam yapmayın</li>
+                            <li class="mb-2">Kaliteli içerik paylaşın</li>
+                            <li class="mb-2">Kişisel bilgi paylaşmayın</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

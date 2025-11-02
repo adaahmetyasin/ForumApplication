@@ -1,0 +1,181 @@
+@model IEnumerable<Post>
+
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<div class="reddit-container">
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <div class="reddit-main-content">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var post in Model)
+                    {
+                        <div class="reddit-post-card">
+                            <!-- Vote Section -->
+                            <div class="reddit-vote-section">
+                                <button class="reddit-vote-btn upvote" title="Upvote">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                </button>
+                                <span class="reddit-vote-count">0</span>
+                                <button class="reddit-vote-btn downvote" title="Downvote">
+                                    <i class="bi bi-arrow-down-circle"></i>
+                                </button>
+                            </div>
+
+                            <!-- Post Content -->
+                            <div class="reddit-post-content">
+                                <a asp-controller="Post" asp-action="Details" asp-route-id="@post.Id" class="reddit-post-title">
+                                    @post.Title
+                                </a>
+
+                                <div class="reddit-post-meta">
+                                    <span>
+                                        <i class="bi bi-person"></i>
+                                        <strong>u/@post.User?.UserName</strong>
+                                    </span>
+                                    <span>
+                                        <i class="bi bi-clock"></i>
+                                        @{
+                                            var timeSpan = DateTime.UtcNow - post.CreatedDate;
+                                            var timeAgo = timeSpan.TotalDays >= 1 ?
+                                                $"{(int)timeSpan.TotalDays} gün önce" :
+                                                timeSpan.TotalHours >= 1 ?
+                                                    $"{(int)timeSpan.TotalHours} saat önce" :
+                                                    $"{(int)timeSpan.TotalMinutes} dakika önce";
+                                        }
+                                        @timeAgo
+                                    </span>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(post.Content))
+                                {
+                                    <div class="reddit-post-preview">
+                                        @(post.Content.Length > 200 ? post.Content.Substring(0, 200) + "..." : post.Content)
+                                    </div>
+                                }
+
+                                <div class="reddit-post-actions">
+                                    <a asp-controller="Post" asp-action="Details" asp-route-id="@post.Id">
+                                        <i class="bi bi-chat-dots"></i> Yorumlar
+                                    </a>
+                                    <a href="#">
+                                        <i class="bi bi-share"></i> Paylaş
+                                    </a>
+                                    <a href="#">
+                                        <i class="bi bi-bookmark"></i> Kaydet
+                                    </a>
+                                    @if (User.Identity?.IsAuthenticated == true && post.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                                    {
+                                        <a asp-controller="Post" asp-action="Edit" asp-route-id="@post.Id">
+                                            <i class="bi bi-pencil"></i> Düzenle
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="reddit-post-card">
+                        <div class="reddit-post-content text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 4rem; color: var(--reddit-text-secondary);"></i>
+                            <h4 class="mt-3">Henüz gönderi bulunmamaktadır</h4>
+                            <p class="text-muted">
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <span>İlk gönderiyi siz oluşturun!</span>
+                                }
+                                else
+                                {
+                                    <span>Gönderi oluşturmak için <a asp-controller="Account" asp-action="Login" class="text-reddit-blue">giriş yapın</a>.</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="reddit-sidebar">
+                <!-- Create Post Card -->
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="reddit-sidebar-card">
+                        <div class="reddit-sidebar-header">
+                            Yeni Gönderi Oluştur
+                        </div>
+                        <div class="reddit-sidebar-content">
+                            <a asp-controller="Post" asp-action="Create" class="reddit-create-post-btn">
+                                <i class="bi bi-plus-circle me-2"></i>Post Oluştur
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                <!-- About Community Card -->
+                <div class="reddit-sidebar-card">
+                    <div class="reddit-sidebar-header">
+                        Topluluk Hakkında
+                    </div>
+                    <div class="reddit-sidebar-content">
+                        <p class="mb-3">ForumApp'e hoş geldiniz! Düşüncelerinizi paylaşın, tartışmalara katılın ve toplulukla bağlantı kurun.</p>
+
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="text-center flex-fill">
+                                <div class="fw-bold text-reddit-blue" style="font-size: 1.2rem;">
+                                    @(Model?.Count() ?? 0)
+                                </div>
+                                <small class="text-muted">Gönderi</small>
+                            </div>
+                            <div class="text-center flex-fill border-start">
+                                <div class="fw-bold text-reddit-blue" style="font-size: 1.2rem;">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <small class="text-muted">Üyeler</small>
+                            </div>
+                        </div>
+
+                        @if (User.Identity?.IsAuthenticated != true)
+                        {
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-reddit-primary w-100 mb-2">
+                                Kayıt Ol
+                            </a>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-reddit-secondary w-100">
+                                Giriş Yap
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Rules Card -->
+                <div class="reddit-sidebar-card">
+                    <div class="reddit-sidebar-header">
+                        Topluluk Kuralları
+                    </div>
+                    <div class="reddit-sidebar-content">
+                        <ol class="ps-3 mb-0">
+                            <li class="mb-2">
+                                <small><strong>Saygılı olun:</strong> Tüm üyelere karşı nazik ve saygılı davranın.</small>
+                            </li>
+                            <li class="mb-2">
+                                <small><strong>Spam yapmayın:</strong> İlgisiz içerik paylaşmayın.</small>
+                            </li>
+                            <li class="mb-2">
+                                <small><strong>Kaliteli içerik:</strong> Anlamlı ve değerli içerikler paylaşın.</small>
+                            </li>
+                            <li class="mb-2">
+                                <small><strong>Kişisel bilgi:</strong> Başkalarının özel bilgilerini paylaşmayın.</small>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
